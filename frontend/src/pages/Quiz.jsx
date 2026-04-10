@@ -40,7 +40,7 @@ export default function Quiz() {
 
   // ✅ TIMER SAFE
   useEffect(() => {
-    if (!questions?.length || revealed) return;
+    if (!(questions?.length > 0) || revealed) return; // ✅ FIXED
 
     startRef.current = Date.now();
     setTimeLeft(TIME_PER_Q);
@@ -57,7 +57,7 @@ export default function Quiz() {
 
     timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current);
-  }, [currentQ, questions?.length]);
+  }, [currentQ, questions?.length, revealed]); // ✅ FIXED (added revealed)
 
   const handleExpire = () => {
     clearInterval(timerRef.current);
@@ -120,7 +120,7 @@ export default function Quiz() {
       const total = questions?.length || 0;
       const pct = total ? Math.round((score / total) * 100) : 0;
       const avgTime = total
-        ? Math.round(answers.reduce((s, a) => s + a.timeTaken, 0) / total)
+        ? Math.round((answers || []).reduce((s, a) => s + (a?.timeTaken || 0), 0) / total) // ✅ FIXED
         : 0;
 
       try {
@@ -129,14 +129,14 @@ export default function Quiz() {
           correct: score,
           total,
           avgTime,
-          answers,
+          answers: answers || [], // ✅ FIXED
         });
       } catch (e) {
         console.error(e);
       }
 
       navigate('/result', {
-        state: { score: pct, correct: score, total, avgTime, answers, questions },
+        state: { score: pct, correct: score, total, avgTime, answers: answers || [], questions: questions || [] }, // ✅ FIXED
       });
 
       return;
@@ -156,11 +156,11 @@ export default function Quiz() {
   if (error)
     return <div className="page-wrap"><div className="alert alert-error">{error}</div></div>;
 
-  if (!questions?.length)
+  if (!(questions?.length > 0)) // ✅ FIXED
     return <div className="page-wrap">No questions</div>;
 
   const q = questions?.[currentQ];
-  if (!q) return null; // ✅ CRASH FIX
+  if (!q) return null;
 
   const pct = (timeLeft / TIME_PER_Q) * 100;
   const offset = CIRCUMFERENCE * (1 - pct / 100);
@@ -171,7 +171,7 @@ export default function Quiz() {
     <div className="page-wrap fade-up">
       <h2>{q.questionText}</h2>
 
-      {q?.options?.map((opt, i) => (
+      {(q?.options || []).map((opt, i) => ( // ✅ FIXED
         <button key={i} onClick={() => handleSelect(i)}>
           {letters[i]} - {opt}
         </button>
@@ -179,7 +179,7 @@ export default function Quiz() {
 
       {revealed && (
         <button onClick={handleNext}>
-          {currentQ + 1 >= questions.length ? 'Finish' : 'Next'}
+          {(currentQ + 1 >= (questions?.length || 0)) ? 'Finish' : 'Next'} {/* ✅ FIXED */}
         </button>
       )}
     </div>
