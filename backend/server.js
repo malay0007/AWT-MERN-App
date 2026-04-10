@@ -1,6 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
 const dotenv = require('dotenv');
 
 dotenv.config();
