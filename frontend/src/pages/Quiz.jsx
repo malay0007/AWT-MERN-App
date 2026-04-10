@@ -5,6 +5,9 @@ import axios from 'axios';
 const TIME_PER_Q = 20;
 const CIRCUMFERENCE = 2 * Math.PI * 18;
 
+// ✅ ADD THIS
+const API = import.meta.env.VITE_API_URL;
+
 export default function Quiz() {
   const navigate = useNavigate();
 
@@ -12,7 +15,7 @@ export default function Quiz() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [currentQ, setCurrentQ] = useState(0); // ✅ FIXED
+  const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [correctIdx, setCorrectIdx] = useState(null);
@@ -25,15 +28,15 @@ export default function Quiz() {
   const timerRef = useRef(null);
   const startRef = useRef(Date.now());
 
-  // ✅ FETCH QUESTIONS (FIXED)
+  // ✅ FIXED API CALL
   useEffect(() => {
-    axios.get('/api/questions', {
+    axios.get(`${API}/api/questions`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('awt_token')}`
       }
     })
     .then(({ data }) => {
-      setQuestions(data?.data || data || []); // ✅ IMPORTANT FIX
+      setQuestions(data?.data || data || []);
       setLoading(false);
     })
     .catch(() => {
@@ -42,7 +45,6 @@ export default function Quiz() {
     });
   }, []);
 
-  // ✅ TIMER SAFE
   useEffect(() => {
     if (!(questions?.length > 0) || revealed) return;
 
@@ -78,7 +80,7 @@ export default function Quiz() {
       const q = questions?.[currentQ];
       if (!q) return;
 
-      const { data } = await axios.post('/api/questions/verify', {
+      const { data } = await axios.post(`${API}/api/questions/verify`, {
         questionId: q._id,
         selected: chosenIdx,
       }, {
@@ -132,7 +134,7 @@ export default function Quiz() {
         : 0;
 
       try {
-        await axios.post('/api/scores', {
+        await axios.post(`${API}/api/scores`, {
           score: pct,
           correct: score,
           total,
@@ -154,14 +156,13 @@ export default function Quiz() {
       return;
     }
 
-    setCurrentQ(q => q + 1); // ✅ FIXED
+    setCurrentQ(q => q + 1);
     setSelected(null);
     setRevealed(false);
     setCorrectIdx(null);
     setExplanation('');
   };
 
-  // ✅ SAFE RETURNS
   if (loading)
     return <div className="page-wrap"><div className="spinner" /></div>;
 
