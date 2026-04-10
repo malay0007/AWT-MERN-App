@@ -10,28 +10,29 @@ export default function Home() {
 
   useEffect(() => {
     axios
-      .get('/api/scores/me')
+      .get('/api/scores/me', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('awt_token')}` // ✅ FIX (IMPORTANT)
+        }
+      })
       .then(({ data }) => {
-        setMyScores(data?.data || []); // ✅ FIX 1
+        setMyScores(data?.data || []);
       })
       .catch(() => {
-        setMyScores([]); // ✅ FIX 2
+        setMyScores([]);
       });
   }, []);
 
-  // ✅ FIX 3 (SAFE LENGTH)
   const best =
     (myScores?.length || 0) > 0
       ? Math.max(...myScores.map((s) => s?.score || 0))
       : null;
 
-  // ✅ FIX 4 (SAFE INDEX)
   const latest = myScores?.[0] || null;
 
   return (
     <div className="page-wrap fade-up">
 
-      {/* Hero */}
       <div className="card" style={{ marginBottom: '1.5rem', textAlign: 'center', padding: '3rem 2rem' }}>
         <span className="badge badge-purple" style={{ marginBottom: '1rem' }}>
           Marwadi University · CE Sem 4
@@ -55,18 +56,11 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '1.5rem' }}>
         {[
-          { label: 'Attempts', val: myScores?.length || 0 }, // ✅ FIX 5
-          {
-            label: 'Best score',
-            val: best !== null ? best + '%' : '—',
-          },
-          {
-            label: 'Last score',
-            val: latest?.score ? latest.score + '%' : '—',
-          },
+          { label: 'Attempts', val: myScores?.length || 0 },
+          { label: 'Best score', val: best !== null ? best + '%' : '—' },
+          { label: 'Last score', val: latest?.score ? latest.score + '%' : '—' },
         ].map(({ label, val }) => (
           <div key={label} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.25rem', textAlign: 'center' }}>
             <div style={{ fontFamily: 'var(--font-head)', fontSize: '28px', fontWeight: 800, color: val === '—' ? 'var(--muted)' : 'var(--purple)' }}>
@@ -79,8 +73,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Recent attempts */}
-      {(myScores?.length || 0) > 0 && ( // ✅ FIX 6
+      {(myScores?.length || 0) > 0 && (
         <div className="card">
           <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '1rem' }}>
             Recent attempts
@@ -98,7 +91,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {myScores?.slice(0, 5).map((s, i) => ( // ✅ FIX 7
+                {myScores?.slice(0, 5).map((s, i) => (
                   <tr key={s?._id || i}>
                     <td style={{ color: 'var(--muted)' }}>{i + 1}</td>
 
@@ -139,7 +132,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Topics covered */}
       <div className="card" style={{ marginTop: '1.5rem' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '1rem' }}>
           Topics covered

@@ -3,6 +3,7 @@ import axios from 'axios';
 
 // 👉 KEEP THIS
 const API = import.meta.env.VITE_API_URL;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 const AuthContext = createContext();
 

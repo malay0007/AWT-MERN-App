@@ -12,7 +12,7 @@ export default function Quiz() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [currentQ, setCurrentQ] = useState(0);
+  const [currentQ, setCurrentQ] = useState(0); // ✅ FIXED
   const [selected, setSelected] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [correctIdx, setCorrectIdx] = useState(null);
@@ -25,22 +25,26 @@ export default function Quiz() {
   const timerRef = useRef(null);
   const startRef = useRef(Date.now());
 
-  // ✅ FETCH QUESTIONS (SAFE)
+  // ✅ FETCH QUESTIONS (FIXED)
   useEffect(() => {
-    axios.get('/api/questions')
-      .then(({ data }) => {
-        setQuestions(data?.data || []); // ✅ SAFE
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Failed to load questions.');
-        setLoading(false);
-      });
+    axios.get('/api/questions', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('awt_token')}`
+      }
+    })
+    .then(({ data }) => {
+      setQuestions(data?.data || data || []); // ✅ IMPORTANT FIX
+      setLoading(false);
+    })
+    .catch(() => {
+      setError('Failed to load questions.');
+      setLoading(false);
+    });
   }, []);
 
   // ✅ TIMER SAFE
   useEffect(() => {
-    if (!(questions?.length > 0) || revealed) return; // ✅ FIXED
+    if (!(questions?.length > 0) || revealed) return;
 
     startRef.current = Date.now();
     setTimeLeft(TIME_PER_Q);
@@ -57,7 +61,7 @@ export default function Quiz() {
 
     timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current);
-  }, [currentQ, questions?.length, revealed]); // ✅ FIXED (added revealed)
+  }, [currentQ, questions?.length, revealed]);
 
   const handleExpire = () => {
     clearInterval(timerRef.current);
@@ -77,6 +81,10 @@ export default function Quiz() {
       const { data } = await axios.post('/api/questions/verify', {
         questionId: q._id,
         selected: chosenIdx,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('awt_token')}`
+        }
       });
 
       setCorrectIdx(data?.correctAnswer);
@@ -120,7 +128,7 @@ export default function Quiz() {
       const total = questions?.length || 0;
       const pct = total ? Math.round((score / total) * 100) : 0;
       const avgTime = total
-        ? Math.round((answers || []).reduce((s, a) => s + (a?.timeTaken || 0), 0) / total) // ✅ FIXED
+        ? Math.round((answers || []).reduce((s, a) => s + (a?.timeTaken || 0), 0) / total)
         : 0;
 
       try {
@@ -129,20 +137,24 @@ export default function Quiz() {
           correct: score,
           total,
           avgTime,
-          answers: answers || [], // ✅ FIXED
+          answers: answers || [],
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('awt_token')}`
+          }
         });
       } catch (e) {
         console.error(e);
       }
 
       navigate('/result', {
-        state: { score: pct, correct: score, total, avgTime, answers: answers || [], questions: questions || [] }, // ✅ FIXED
+        state: { score: pct, correct: score, total, avgTime, answers: answers || [], questions: questions || [] },
       });
 
       return;
     }
 
-    setCurrentQ(q => q + 1);
+    setCurrentQ(q => q + 1); // ✅ FIXED
     setSelected(null);
     setRevealed(false);
     setCorrectIdx(null);
@@ -156,14 +168,11 @@ export default function Quiz() {
   if (error)
     return <div className="page-wrap"><div className="alert alert-error">{error}</div></div>;
 
-  if (!(questions?.length > 0)) // ✅ FIXED
+  if (!(questions?.length > 0))
     return <div className="page-wrap">No questions</div>;
 
   const q = questions?.[currentQ];
   if (!q) return null;
-
-  const pct = (timeLeft / TIME_PER_Q) * 100;
-  const offset = CIRCUMFERENCE * (1 - pct / 100);
 
   const letters = ['A', 'B', 'C', 'D'];
 
@@ -171,7 +180,7 @@ export default function Quiz() {
     <div className="page-wrap fade-up">
       <h2>{q.questionText}</h2>
 
-      {(q?.options || []).map((opt, i) => ( // ✅ FIXED
+      {(q?.options || []).map((opt, i) => (
         <button key={i} onClick={() => handleSelect(i)}>
           {letters[i]} - {opt}
         </button>
@@ -179,7 +188,7 @@ export default function Quiz() {
 
       {revealed && (
         <button onClick={handleNext}>
-          {(currentQ + 1 >= (questions?.length || 0)) ? 'Finish' : 'Next'} {/* ✅ FIXED */}
+          {(currentQ + 1 >= (questions?.length || 0)) ? 'Finish' : 'Next'}
         </button>
       )}
     </div>
