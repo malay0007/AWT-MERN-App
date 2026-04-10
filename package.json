@@ -1,0 +1,13 @@
+{
+  "name": "awt-quiz-mern",
+  "version": "1.0.0",
+  "description": "AWT Quiz App - MERN Stack",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
