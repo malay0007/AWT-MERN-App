@@ -149,19 +149,34 @@ export default function Quiz() {
   if (!(questions?.length > 0)) return <div className="page-wrap">No questions</div>;
 
   const q = questions[currentQ];
+  const letters = ['A', 'B', 'C', 'D'];
 
   return (
     <div className="page-wrap fade-up">
       <h2>{q.questionText}</h2>
 
-      {(q?.options || []).map((opt, i) => (
-        <button key={i} onClick={() => handleSelect(i)}>
-          {opt}
-        </button>
-      ))}
+      {/* ✅ FIXED OPTIONS LAYOUT */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+        {(q?.options || []).map((opt, i) => (
+          <button
+            key={i}
+            onClick={() => handleSelect(i)}
+            style={{
+              padding: '12px',
+              textAlign: 'left',
+              borderRadius: '10px',
+              border: '1px solid var(--border)',
+              background: 'var(--bg2)',
+              cursor: 'pointer'
+            }}
+          >
+            <strong>{letters[i]}.</strong> {opt}
+          </button>
+        ))}
+      </div>
 
       {revealed && (
-        <button onClick={handleNext}>
+        <button onClick={handleNext} style={{ marginTop: '20px' }}>
           {(currentQ + 1 >= questions.length) ? 'Finish' : 'Next'}
         </button>
       )}
