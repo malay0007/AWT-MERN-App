@@ -11,7 +11,7 @@ export default function Result() {
 
   useEffect(() => {
     if (!state) { navigate('/'); return; }
-    const { score } = state;
+    const { score = 0 } = state || {};
     setTimeout(() => {
       if (arcRef.current) {
         arcRef.current.style.strokeDashoffset = CIRCUMFERENCE * (1 - score / 100);
@@ -28,8 +28,20 @@ export default function Result() {
     }, 100);
   }, [state]);
 
-  if (!state) return null;
-  const { score, correct, total, avgTime, answers = [], questions = [] } = state;
+  // ✅ SAFE GUARD (FIXED)
+  if (!state || !state.questions) {
+    return <div className="page-wrap">No result data</div>;
+  }
+
+  // ✅ SAFE DESTRUCTURING (FIXED)
+  const {
+    score = 0,
+    correct = 0,
+    total = 0,
+    avgTime = 0,
+    answers = [],
+    questions = []
+  } = state || {};
 
   const getBadge = () => {
     if (score >= 90) return { text: 'Expert — 90%+',      cls: 'badge-green' };
@@ -89,8 +101,10 @@ export default function Result() {
       {/* Answer review */}
       <div className="card">
         <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '1rem' }}>Answer review</h3>
-        {questions.map((q, i) => {
-          const a = answers[i];
+
+        {/* ✅ SAFE MAP (FIXED) */}
+        {(questions || []).map((q, i) => {
+          const a = (answers || [])[i];
           const isCorrect = a?.correct;
           return (
             <div key={q._id} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -100,13 +114,19 @@ export default function Result() {
                 </span>
                 <span style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>{q.questionText}</span>
               </div>
+
               {!isCorrect && a?.selected !== -1 && (
                 <div style={{ fontSize: '12px', paddingLeft: '4px' }}>
-                  <span style={{ color: 'var(--red)' }}>Your answer: {q.options[a?.selected]}</span>
+                  <span style={{ color: 'var(--red)' }}>
+                    Your answer: {(q.options || [])[a?.selected]}
+                  </span>
                 </div>
               )}
+
               {a?.selected === -1 && (
-                <div style={{ fontSize: '12px', color: 'var(--amber)', paddingLeft: '4px' }}>Time's up — no answer given</div>
+                <div style={{ fontSize: '12px', color: 'var(--amber)', paddingLeft: '4px' }}>
+                  Time's up — no answer given
+                </div>
               )}
             </div>
           );
