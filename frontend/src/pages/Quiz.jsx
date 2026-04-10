@@ -9,7 +9,6 @@ export default function Quiz() {
 
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -33,19 +32,22 @@ export default function Quiz() {
       setQuestions(data?.data || []);
       setLoading(false);
     })
-    .catch(() => {
-      setError('Failed to load questions.');
-      setLoading(false);
-    });
+    .catch(() => setLoading(false));
   }, []);
 
-  // ✅ FIXED ANSWER HANDLING (NO FLICKER)
+  // ✅ INSTANT RESPONSE FIX
   const revealAnswer = async (chosenIdx, elapsed) => {
+    const q = questions[currentQ];
+
+    // 🔥 STEP 1: INSTANT UI (NO DELAY)
+    setSelected(chosenIdx);
     setRevealed(true);
 
-    try {
-      const q = questions[currentQ];
+    // fallback (temporary) → assume correct index 0 (will update)
+    setCorrectIdx(chosenIdx); 
 
+    // 🔥 STEP 2: API IN BACKGROUND
+    try {
       const { data } = await axios.post(`${API}/api/questions/verify`, {
         questionId: q._id,
         selected: chosenIdx,
@@ -55,8 +57,7 @@ export default function Quiz() {
         }
       });
 
-      // 🔥 SET ALL STATES TOGETHER
-      setSelected(chosenIdx);
+      // 🔥 UPDATE REAL DATA
       setCorrectIdx(data.correctAnswer);
       setExplanation(data.explanation || '');
 
@@ -100,7 +101,6 @@ export default function Quiz() {
   };
 
   if (loading) return <div className="page-wrap"><div className="spinner" /></div>;
-  if (error) return <div className="page-wrap">{error}</div>;
   if (!questions.length) return <div className="page-wrap">No questions</div>;
 
   const q = questions[currentQ];
@@ -134,11 +134,11 @@ export default function Quiz() {
 
           if (revealed) {
             if (i === correctIdx) {
-              bg = '#064e3b'; // ✅ GREEN
+              bg = '#064e3b';
               border = '1px solid #34d399';
             } 
             else if (i === selected && i !== correctIdx) {
-              bg = '#7f1d1d'; // ✅ RED ONLY IF WRONG
+              bg = '#7f1d1d';
               border = '1px solid #f87171';
             }
           }
@@ -149,15 +149,13 @@ export default function Quiz() {
               onClick={() => handleSelect(i)}
               style={{
                 width: '100%',
-                padding: '14px 16px',
+                padding: '14px',
                 marginBottom: '10px',
                 borderRadius: '12px',
                 background: bg,
                 border: border,
                 color: 'white',
-                textAlign: 'left',
-                fontSize: '14px',
-                transition: '0.2s'
+                textAlign: 'left'
               }}
             >
               {opt}
@@ -175,8 +173,8 @@ export default function Quiz() {
             border: '1px solid var(--purple)'
           }}>
             <strong style={{ color: 'var(--purple)' }}>Reason:</strong>
-            <div style={{ fontSize: '13px', marginTop: '6px' }}>
-              {explanation}
+            <div style={{ marginTop: '6px' }}>
+              {explanation || "Loading explanation..."}
             </div>
           </div>
         )}
@@ -193,9 +191,7 @@ export default function Quiz() {
               background: 'linear-gradient(90deg, #7c3aed, #a78bfa)',
               border: 'none',
               color: 'white',
-              fontWeight: 600,
-              fontSize: '14px',
-              cursor: 'pointer'
+              fontWeight: 600
             }}
           >
             {currentQ + 1 >= questions.length ? 'Finish →' : 'Next →'}
