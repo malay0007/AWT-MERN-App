@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-// 👉 ADD THIS LINE (VERY IMPORTANT)
+// 👉 KEEP THIS
 const API = import.meta.env.VITE_API_URL;
 
 const AuthContext = createContext();
@@ -11,9 +11,10 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('awt_token') || null);
   const [loading, setLoading] = useState(true);
 
-  // Set axios default auth header whenever token changes
+  // ✅ FIXED useEffect
   useEffect(() => {
     if (token) {
+      axios.defaults.baseURL = API; // ✅ ADD THIS LINE
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchMe();
     } else {
@@ -23,10 +24,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  // 👉 FIXED API URL HERE
+  // 👉 NO CHANGE
   const fetchMe = async () => {
     try {
-      const { data } = await axios.get(`${API}/api/auth/me`);
+      const { data } = await axios.get(`/api/auth/me`); // ✅ REMOVE ${API}
       setUser(data.user);
     } catch {
       logout();
@@ -35,18 +36,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 👉 FIXED API URL HERE
+  // 👉 NO CHANGE (just remove ${API})
   const login = async (email, password) => {
-    const { data } = await axios.post(`${API}/api/auth/login`, { email, password });
+    const { data } = await axios.post(`/api/auth/login`, { email, password }); // ✅ FIX
     localStorage.setItem('awt_token', data.token);
     setToken(data.token);
     setUser(data.user);
     return data.user;
   };
 
-  // 👉 FIXED API URL HERE
+  // 👉 NO CHANGE (just remove ${API})
   const register = async (name, email, password) => {
-    const { data } = await axios.post(`${API}/api/auth/register`, { name, email, password });
+    const { data } = await axios.post(`/api/auth/register`, { name, email, password }); // ✅ FIX
     localStorage.setItem('awt_token', data.token);
     setToken(data.token);
     setUser(data.user);
