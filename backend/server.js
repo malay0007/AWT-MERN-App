@@ -1,30 +1,34 @@
 const express = require('express');
 const mongoose = require('mongoose');
-app.use(cors({
-  origin: "*",
-  credentials: true
-}));
+const cors = require('cors');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const authRoutes     = require('./routes/authRoutes');
-const questionRoutes = require('./routes/questionRoutes');
-const scoreRoutes    = require('./routes/scoreRoutes');
-
+// ✅ CREATE APP FIRST
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+// ✅ SIMPLE CORS (this fixes your frontend error)
+app.use(cors());
+
+// Middleware
 app.use(express.json());
 
-app.use('/api/auth',      authRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/scores',    scoreRoutes);
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const scoreRoutes = require('./routes/scoreRoutes');
 
+app.use('/api/auth', authRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/scores', scoreRoutes);
+
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'AWT Quiz API is running' });
 });
 
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
@@ -33,12 +37,16 @@ app.use((err, req, res, next) => {
   });
 });
 
+// MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
+
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
   })
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
