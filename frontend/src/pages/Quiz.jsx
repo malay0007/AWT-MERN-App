@@ -21,7 +21,7 @@ export default function Quiz() {
 
   const startRef = useRef(Date.now());
 
-  // FETCH QUESTIONS
+  // FETCH
   useEffect(() => {
     axios.get(`${API}/api/questions`, {
       headers: {
@@ -35,29 +35,27 @@ export default function Quiz() {
     .catch(() => setLoading(false));
   }, []);
 
-  // ✅ INSTANT RESPONSE FIX
-  const revealAnswer = async (chosenIdx, elapsed) => {
-    const q = questions[currentQ];
+  // ✅ FIXED LOGIC
+  const revealAnswer = async (idx, elapsed) => {
+    if (revealed) return;
 
-    // 🔥 STEP 1: INSTANT UI (NO DELAY)
-    setSelected(chosenIdx);
+    // STEP 1: show selection ONLY (no color yet)
+    setSelected(idx);
     setRevealed(true);
 
-    // fallback (temporary) → assume correct index 0 (will update)
-    setCorrectIdx(chosenIdx); 
-
-    // 🔥 STEP 2: API IN BACKGROUND
     try {
+      const q = questions[currentQ];
+
       const { data } = await axios.post(`${API}/api/questions/verify`, {
         questionId: q._id,
-        selected: chosenIdx,
+        selected: idx,
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('awt_token')}`
         }
       });
 
-      // 🔥 UPDATE REAL DATA
+      // STEP 2: apply result AFTER response
       setCorrectIdx(data.correctAnswer);
       setExplanation(data.explanation || '');
 
@@ -67,7 +65,7 @@ export default function Quiz() {
 
       setAnswers(prev => [...prev, {
         questionId: q._id,
-        selected: chosenIdx,
+        selected: idx,
         correct: data.isCorrect,
         timeTaken: elapsed,
       }]);
@@ -76,7 +74,6 @@ export default function Quiz() {
   };
 
   const handleSelect = (idx) => {
-    if (revealed) return;
     const elapsed = Math.round((Date.now() - startRef.current) / 1000);
     revealAnswer(idx, elapsed);
   };
@@ -108,14 +105,12 @@ export default function Quiz() {
   return (
     <div className="page-wrap fade-up" style={{ maxWidth: '600px', margin: '0 auto' }}>
 
-      {/* HEADER */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h3 style={{ color: 'var(--muted)', fontSize: '14px' }}>
+        <h3 style={{ color: 'var(--muted)' }}>
           {String(currentQ + 1).padStart(2, '0')} / {questions.length}
         </h3>
       </div>
 
-      {/* CARD */}
       <div style={{
         background: 'var(--bg2)',
         border: '1px solid var(--border)',
@@ -123,22 +118,23 @@ export default function Quiz() {
         padding: '24px'
       }}>
 
-        <h2 style={{ marginBottom: '20px', fontSize: '18px' }}>
+        <h2 style={{ marginBottom: '20px' }}>
           {q.questionText}
         </h2>
 
-        {/* OPTIONS */}
         {(q.options || []).map((opt, i) => {
+
           let bg = 'var(--bg3)';
           let border = '1px solid var(--border)';
 
-          if (revealed) {
+          // 🔥 FINAL COLOR LOGIC
+          if (revealed && correctIdx !== null) {
             if (i === correctIdx) {
-              bg = '#064e3b';
+              bg = '#064e3b'; // green
               border = '1px solid #34d399';
             } 
             else if (i === selected && i !== correctIdx) {
-              bg = '#7f1d1d';
+              bg = '#7f1d1d'; // red
               border = '1px solid #f87171';
             }
           }
@@ -163,8 +159,8 @@ export default function Quiz() {
           );
         })}
 
-        {/* EXPLANATION */}
-        {revealed && (
+        {/* SHOW ONLY AFTER READY */}
+        {correctIdx !== null && (
           <div style={{
             marginTop: '16px',
             padding: '14px',
@@ -174,13 +170,12 @@ export default function Quiz() {
           }}>
             <strong style={{ color: 'var(--purple)' }}>Reason:</strong>
             <div style={{ marginTop: '6px' }}>
-              {explanation || "Loading explanation..."}
+              {explanation}
             </div>
           </div>
         )}
 
-        {/* NEXT BUTTON */}
-        {revealed && (
+        {correctIdx !== null && (
           <button
             onClick={handleNext}
             style={{
