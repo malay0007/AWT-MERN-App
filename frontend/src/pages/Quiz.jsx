@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const TIME_PER_Q = 20;
 const API = "https://awt-mern-backend1.onrender.com";
 
 export default function Quiz() {
@@ -17,8 +16,6 @@ export default function Quiz() {
   const [correctIdx, setCorrectIdx] = useState(null);
   const [explanation, setExplanation] = useState('');
 
-  const timerRef = useRef(null);
-
   useEffect(() => {
     axios.get(`${API}/api/questions`, {
       headers: {
@@ -32,7 +29,7 @@ export default function Quiz() {
     .catch(() => setLoading(false));
   }, []);
 
-  const revealAnswer = async (idx) => {
+  const handleSelect = async (idx) => {
     if (revealed) return;
 
     setSelected(idx);
@@ -68,15 +65,15 @@ export default function Quiz() {
     setExplanation('');
   };
 
-  if (loading) return <div className="spinner" />;
-  if (!questions.length) return <div>No questions</div>;
+  if (loading) return <div className="page-wrap"><div className="spinner" /></div>;
+  if (!questions.length) return <div className="page-wrap">No questions</div>;
 
   const q = questions[currentQ];
 
   return (
     <div className="page-wrap fade-up">
 
-      {/* TOP BAR */}
+      {/* TOP */}
       <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
         <span style={{ fontSize: '20px', fontWeight: 700 }}>
           {String(currentQ + 1).padStart(2, '0')} / {questions.length}
@@ -93,18 +90,19 @@ export default function Quiz() {
         {/* OPTIONS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {q.options.map((opt, i) => {
-            let cls = 'btn-ghost';
+
+            let className = "btn btn-ghost";
 
             if (revealed) {
-              if (i === correctIdx) cls = 'btn-success';
-              else if (i === selected) cls = 'btn-danger';
+              if (i === correctIdx) className = "btn btn-primary";
+              else if (i === selected) className = "btn";
             }
 
             return (
               <button
                 key={i}
-                className={cls}
-                onClick={() => revealAnswer(i)}
+                className={className}
+                onClick={() => handleSelect(i)}
               >
                 {opt}
               </button>
@@ -115,7 +113,9 @@ export default function Quiz() {
         {/* EXPLANATION */}
         {revealed && (
           <div style={{ marginTop: '1rem' }}>
-            <p style={{ color: 'var(--muted)' }}>{explanation}</p>
+            <p style={{ color: 'var(--muted)' }}>
+              {explanation}
+            </p>
 
             <button className="btn-primary" onClick={handleNext}>
               {currentQ + 1 >= questions.length ? 'Finish' : 'Next'}
