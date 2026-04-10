@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// ✅ ADD THIS
+const API = "https://awt-mern-backend1.onrender.com";
+
 export default function Leaderboard() {
   const [scores, setScores]   = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('/api/scores/leaderboard', {
+    axios.get(`${API}/api/scores/leaderboard`, { // ✅ ONLY CHANGE
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('awt_token')}` // ✅ FIX
+        Authorization: `Bearer ${localStorage.getItem('awt_token')}`
       }
     })
       .then(({ data }) => { 

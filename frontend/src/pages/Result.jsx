@@ -1,6 +1,9 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
-import axios from 'axios'; // ✅ ADD THIS
+import axios from 'axios';
+
+// ✅ ADD THIS
+const API = "https://awt-mern-backend1.onrender.com";
 
 const CIRCUMFERENCE = 2 * Math.PI * 50;
 
@@ -15,8 +18,8 @@ export default function Result() {
 
     const { score = 0, correct = 0, total = 0, avgTime = 0, answers = [] } = state || {};
 
-    // ✅ OPTIONAL: SAVE SCORE (IMPORTANT)
-    axios.post('/api/scores', {
+    // ✅ FIXED API CALL
+    axios.post(`${API}/api/scores`, {
       score,
       correct,
       total,

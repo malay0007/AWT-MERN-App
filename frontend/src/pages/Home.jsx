@@ -3,6 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+// ✅ ADD THIS LINE
+const API = "https://awt-mern-backend1.onrender.com";
+
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -10,9 +13,9 @@ export default function Home() {
 
   useEffect(() => {
     axios
-      .get('/api/scores/me', {
+      .get(`${API}/api/scores/me`, { // ✅ ONLY CHANGE
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('awt_token')}` // ✅ FIX (IMPORTANT)
+          Authorization: `Bearer ${localStorage.getItem('awt_token')}`
         }
       })
       .then(({ data }) => {

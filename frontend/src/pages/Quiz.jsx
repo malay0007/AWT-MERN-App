@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const TIME_PER_Q = 20;
-const CIRCUMFERENCE = 2 * Math.PI * 18;
-
-// ✅ ADD THIS
-const API = import.meta.env.VITE_API_URL;
+const API = "https://awt-mern-backend1.onrender.com";
 
 export default function Quiz() {
   const navigate = useNavigate();
@@ -28,7 +25,6 @@ export default function Quiz() {
   const timerRef = useRef(null);
   const startRef = useRef(Date.now());
 
-  // ✅ FIXED API CALL
   useEffect(() => {
     axios.get(`${API}/api/questions`, {
       headers: {
@@ -36,10 +32,10 @@ export default function Quiz() {
       }
     })
     .then(({ data }) => {
-      setQuestions(data?.data || data || []);
+      setQuestions(data?.data || []);
       setLoading(false);
     })
-    .catch(() => {
+    .catch((err) => {
       setError('Failed to load questions.');
       setLoading(false);
     });
@@ -103,20 +99,7 @@ export default function Quiz() {
           timeTaken: elapsed,
         },
       ]);
-    } catch {
-      const q = questions?.[currentQ];
-      if (!q) return;
-
-      setAnswers(prev => [
-        ...prev,
-        {
-          questionId: q._id,
-          selected: chosenIdx,
-          correct: false,
-          timeTaken: elapsed,
-        },
-      ]);
-    }
+    } catch {}
   };
 
   const handleSelect = (idx) => {
@@ -145,12 +128,10 @@ export default function Quiz() {
             Authorization: `Bearer ${localStorage.getItem('awt_token')}`
           }
         });
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
 
       navigate('/result', {
-        state: { score: pct, correct: score, total, avgTime, answers: answers || [], questions: questions || [] },
+        state: { score: pct, correct: score, total, avgTime, answers, questions },
       });
 
       return;
@@ -163,19 +144,11 @@ export default function Quiz() {
     setExplanation('');
   };
 
-  if (loading)
-    return <div className="page-wrap"><div className="spinner" /></div>;
+  if (loading) return <div className="page-wrap"><div className="spinner" /></div>;
+  if (error) return <div className="page-wrap">{error}</div>;
+  if (!(questions?.length > 0)) return <div className="page-wrap">No questions</div>;
 
-  if (error)
-    return <div className="page-wrap"><div className="alert alert-error">{error}</div></div>;
-
-  if (!(questions?.length > 0))
-    return <div className="page-wrap">No questions</div>;
-
-  const q = questions?.[currentQ];
-  if (!q) return null;
-
-  const letters = ['A', 'B', 'C', 'D'];
+  const q = questions[currentQ];
 
   return (
     <div className="page-wrap fade-up">
@@ -183,13 +156,13 @@ export default function Quiz() {
 
       {(q?.options || []).map((opt, i) => (
         <button key={i} onClick={() => handleSelect(i)}>
-          {letters[i]} - {opt}
+          {opt}
         </button>
       ))}
 
       {revealed && (
         <button onClick={handleNext}>
-          {(currentQ + 1 >= (questions?.length || 0)) ? 'Finish' : 'Next'}
+          {(currentQ + 1 >= questions.length) ? 'Finish' : 'Next'}
         </button>
       )}
     </div>
