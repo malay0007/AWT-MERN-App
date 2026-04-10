@@ -1,7 +1,7 @@
 const jwt  = require('jsonwebtoken');
 const User = require('../models/User');
 const generateToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || "7d" });
 const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
