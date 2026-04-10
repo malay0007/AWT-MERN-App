@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const TIME_PER_Q = 20;
 const API = "https://awt-mern-backend1.onrender.com";
 
 export default function Quiz() {
@@ -40,8 +39,8 @@ export default function Quiz() {
     });
   }, []);
 
+  // ✅ FIXED ANSWER HANDLING (NO FLICKER)
   const revealAnswer = async (chosenIdx, elapsed) => {
-    setSelected(chosenIdx);
     setRevealed(true);
 
     try {
@@ -56,10 +55,14 @@ export default function Quiz() {
         }
       });
 
+      // 🔥 SET ALL STATES TOGETHER
+      setSelected(chosenIdx);
       setCorrectIdx(data.correctAnswer);
       setExplanation(data.explanation || '');
 
-      if (data.isCorrect) setScore(s => s + 1);
+      if (data.isCorrect) {
+        setScore(s => s + 1);
+      }
 
       setAnswers(prev => [...prev, {
         questionId: q._id,
@@ -108,7 +111,7 @@ export default function Quiz() {
       {/* HEADER */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h3 style={{ color: 'var(--muted)', fontSize: '14px' }}>
-          Question {currentQ + 1} / {questions.length}
+          {String(currentQ + 1).padStart(2, '0')} / {questions.length}
         </h3>
       </div>
 
@@ -131,10 +134,11 @@ export default function Quiz() {
 
           if (revealed) {
             if (i === correctIdx) {
-              bg = '#064e3b';
+              bg = '#064e3b'; // ✅ GREEN
               border = '1px solid #34d399';
-            } else if (i === selected) {
-              bg = '#7f1d1d';
+            } 
+            else if (i === selected && i !== correctIdx) {
+              bg = '#7f1d1d'; // ✅ RED ONLY IF WRONG
               border = '1px solid #f87171';
             }
           }
