@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// 👉 ADD THIS LINE (VERY IMPORTANT)
+const API = import.meta.env.VITE_API_URL;
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
-  const [token, setToken]     = useState(localStorage.getItem('awt_token') || null);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('awt_token') || null);
   const [loading, setLoading] = useState(true);
 
   // Set axios default auth header whenever token changes
@@ -20,9 +23,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  // 👉 FIXED API URL HERE
   const fetchMe = async () => {
     try {
-      const { data } = await axios.get('/api/auth/me');
+      const { data } = await axios.get(`${API}/api/auth/me`);
       setUser(data.user);
     } catch {
       logout();
@@ -31,16 +35,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // 👉 FIXED API URL HERE
   const login = async (email, password) => {
-    const { data } = await axios.post('/api/auth/login', { email, password });
+    const { data } = await axios.post(`${API}/api/auth/login`, { email, password });
     localStorage.setItem('awt_token', data.token);
     setToken(data.token);
     setUser(data.user);
     return data.user;
   };
 
+  // 👉 FIXED API URL HERE
   const register = async (name, email, password) => {
-    const { data } = await axios.post('/api/auth/register', { name, email, password });
+    const { data } = await axios.post(`${API}/api/auth/register`, { name, email, password });
     localStorage.setItem('awt_token', data.token);
     setToken(data.token);
     setUser(data.user);
