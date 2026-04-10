@@ -22,12 +22,12 @@ export default function Leaderboard() {
         </p>
 
         {loading && <div className="spinner" />}
-        {!loading && !scores.length && (
+        {!loading && !scores?.length && (
           <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>
             No scores yet. Be the first to take the quiz!
           </p>
         )}
-        {!loading && scores.map((s, i) => (
+        {!loading && scores?.map((s, i) => (
           <div key={s._id} style={{
             display: 'flex', alignItems: 'center', gap: '12px',
             padding: '14px 16px', background: 'var(--bg3)',
@@ -39,7 +39,7 @@ export default function Leaderboard() {
               {i < 3 ? medals[i] : `#${i + 1}`}
             </span>
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--purple-dim)', color: 'var(--purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontSize: '13px', fontWeight: 700, flexShrink: 0 }}>
-              {s.user?.name?.slice(0, 2).toUpperCase() || '??'}
+              {s.user?.name ? s.user.name.slice(0, 2).toUpperCase() : "??"}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.user?.name}</div>
