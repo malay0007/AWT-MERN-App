@@ -25,6 +25,7 @@ export default function Quiz() {
   const timerRef = useRef(null);
   const startRef = useRef(Date.now());
 
+  // FETCH QUESTIONS
   useEffect(() => {
     axios.get(`${API}/api/questions`, {
       headers: {
@@ -35,12 +36,13 @@ export default function Quiz() {
       setQuestions(data?.data || []);
       setLoading(false);
     })
-    .catch((err) => {
+    .catch(() => {
       setError('Failed to load questions.');
       setLoading(false);
     });
   }, []);
 
+  // TIMER
   useEffect(() => {
     if (!(questions?.length > 0) || revealed) return;
 
@@ -73,8 +75,7 @@ export default function Quiz() {
     setRevealed(true);
 
     try {
-      const q = questions?.[currentQ];
-      if (!q) return;
+      const q = questions[currentQ];
 
       const { data } = await axios.post(`${API}/api/questions/verify`, {
         questionId: q._id,
@@ -85,20 +86,18 @@ export default function Quiz() {
         }
       });
 
-      setCorrectIdx(data?.correctAnswer);
-      setExplanation(data?.explanation || '');
+      setCorrectIdx(data.correctAnswer);
+      setExplanation(data.explanation);
 
-      if (data?.isCorrect) setScore(s => s + 1);
+      if (data.isCorrect) setScore(s => s + 1);
 
-      setAnswers(prev => [
-        ...prev,
-        {
-          questionId: q._id,
-          selected: chosenIdx,
-          correct: data?.isCorrect || false,
-          timeTaken: elapsed,
-        },
-      ]);
+      setAnswers(prev => [...prev, {
+        questionId: q._id,
+        selected: chosenIdx,
+        correct: data.isCorrect,
+        timeTaken: elapsed
+      }]);
+
     } catch {}
   };
 
@@ -108,32 +107,11 @@ export default function Quiz() {
     revealAnswer(idx, Math.min(elapsed, TIME_PER_Q));
   };
 
-  const handleNext = async () => {
-    if (currentQ + 1 >= (questions?.length || 0)) {
-      const total = questions?.length || 0;
-      const pct = total ? Math.round((score / total) * 100) : 0;
-      const avgTime = total
-        ? Math.round((answers || []).reduce((s, a) => s + (a?.timeTaken || 0), 0) / total)
-        : 0;
-
-      try {
-        await axios.post(`${API}/api/scores`, {
-          score: pct,
-          correct: score,
-          total,
-          avgTime,
-          answers: answers || [],
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('awt_token')}`
-          }
-        });
-      } catch (e) {}
-
+  const handleNext = () => {
+    if (currentQ + 1 >= questions.length) {
       navigate('/result', {
-        state: { score: pct, correct: score, total, avgTime, answers, questions },
+        state: { score, answers, questions }
       });
-
       return;
     }
 
@@ -146,39 +124,64 @@ export default function Quiz() {
 
   if (loading) return <div className="page-wrap"><div className="spinner" /></div>;
   if (error) return <div className="page-wrap">{error}</div>;
-  if (!(questions?.length > 0)) return <div className="page-wrap">No questions</div>;
+  if (!questions.length) return <div className="page-wrap">No questions</div>;
 
   const q = questions[currentQ];
   const letters = ['A', 'B', 'C', 'D'];
 
   return (
     <div className="page-wrap fade-up">
-      <h2>{q.questionText}</h2>
 
-      {/* ✅ FIXED OPTIONS LAYOUT */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-        {(q?.options || []).map((opt, i) => (
-          <button
-            key={i}
-            onClick={() => handleSelect(i)}
-            style={{
-              padding: '12px',
-              textAlign: 'left',
-              borderRadius: '10px',
-              border: '1px solid var(--border)',
-              background: 'var(--bg2)',
-              cursor: 'pointer'
-            }}
-          >
-            <strong>{letters[i]}.</strong> {opt}
-          </button>
-        ))}
+      <h2 style={{ marginBottom: '1.5rem' }}>{q.questionText}</h2>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {q.options.map((opt, i) => {
+          let bg = 'var(--bg2)';
+
+          if (revealed) {
+            if (i === correctIdx) bg = '#065f46'; // green
+            else if (i === selected) bg = '#7f1d1d'; // red
+          }
+
+          return (
+            <button
+              key={i}
+              onClick={() => handleSelect(i)}
+              style={{
+                padding: '14px',
+                borderRadius: '12px',
+                border: '1px solid var(--border)',
+                background: bg,
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
+              {letters[i]}. {opt}
+            </button>
+          );
+        })}
       </div>
 
       {revealed && (
-        <button onClick={handleNext} style={{ marginTop: '20px' }}>
-          {(currentQ + 1 >= questions.length) ? 'Finish' : 'Next'}
-        </button>
+        <>
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: 'var(--bg2)',
+            borderRadius: '10px'
+          }}>
+            <strong>Explanation:</strong>
+            <p>{explanation}</p>
+          </div>
+
+          <button
+            onClick={handleNext}
+            style={{ marginTop: '1rem' }}
+            className="btn-primary"
+          >
+            {currentQ + 1 >= questions.length ? 'Finish' : 'Next'}
+          </button>
+        </>
       )}
     </div>
   );
