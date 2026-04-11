@@ -1,8 +1,6 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
-import axios from 'axios';
 
-const API = "https://awt-mern-backend1.onrender.com";
 const CIRCUMFERENCE = 2 * Math.PI * 50;
 
 export default function Result() {
@@ -18,25 +16,7 @@ export default function Result() {
       return;
     }
 
-    const {
-      score = 0,
-      correct = 0,
-      total = 0,
-      avgTime = 0,
-      answers = [],
-    } = state;
-
-    axios.post(`${API}/api/scores`, {
-      score,
-      correct,
-      total,
-      avgTime,
-      answers,
-    }, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('awt_token')}`,
-      },
-    }).catch(() => {});
+    const { score = 0 } = state;
 
     setTimeout(() => {
       if (arcRef.current) {
